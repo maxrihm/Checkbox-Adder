@@ -1,12 +1,23 @@
-.rad-menu-option {
-    cursor: pointer;
-    padding: 8px 16px;
-    margin: 4px 8px;
-    background-color: #f5f5f5;
-    border-radius: 8px;
-    transition: background-color 0.3s;
-  }
-  
-  .rad-menu-option:hover {
-    background-color: #e0e0e0;
-  }
+/* Style for header buttons */
+.header-button {
+  cursor: pointer;
+  padding: 8px 16px;
+  margin: 4px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  transition: background-color 0.3s;
+}
+
+.header-button:hover {
+  background-color: #45a049;
+}
+
+/* Style for the counter label */
+.header-label {
+  margin-left: 10px;
+  font-size: 12px;
+  color: #333;
+}

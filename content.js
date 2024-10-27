@@ -4,6 +4,32 @@ console.log("Content script loaded: content.js");
 let messageObjects = [];
 
 // Function to add options ("Collect and Copy Messages") to the header
+function updateCounter() {
+    const selectedCount = document.querySelectorAll('.message-checkbox:checked').length;
+    const totalCount = document.querySelectorAll('.message-checkbox').length;
+    const counterLabel = document.getElementById('selection-counter');
+    if (counterLabel) {
+        counterLabel.innerText = `Selected: ${selectedCount} / Total: ${totalCount}`;
+    }
+}
+
+// Function to select all checkboxes
+function selectAllCheckboxes() {
+    const checkboxes = document.querySelectorAll('.message-checkbox');
+    checkboxes.forEach(checkbox => checkbox.checked = true);
+    updateCounter();
+}
+
+// Function to clear all selections
+function clearSelections() {
+    const checkboxes = document.querySelectorAll('.message-checkbox');
+    checkboxes.forEach(checkbox => checkbox.checked = false);
+    const textboxes = document.querySelectorAll('input[type="text"], textarea');
+    textboxes.forEach(textbox => textbox.value = '');
+    updateCounter();
+}
+
+// Modified function to add options to the header, including new buttons
 function addOptionsToHeader() {
     const header = document.querySelector('div.draggable.no-draggable-children.sticky');
 
@@ -12,7 +38,12 @@ function addOptionsToHeader() {
         return;
     }
 
-    console.log("Header found. Adding Collect and Copy Messages button...");
+    // Avoid adding buttons multiple times
+    if (header.querySelector('.header-button')) {
+        return;
+    }
+
+    console.log("Header found. Adding buttons...");
 
     // Create the "Collect and Copy Messages" button
     const collectMessagesButton = document.createElement('button');
@@ -23,11 +54,32 @@ function addOptionsToHeader() {
         collectAndCopyMessages();
     });
 
-    // Add the "Collect and Copy Messages" button to the header if it's not already there
-    if (!header.querySelector('.header-button')) {
-        header.appendChild(collectMessagesButton);
-        console.log("Collect and Copy Messages button added to header.");
-    }
+    // Create the "Select All" button
+    const selectAllButton = document.createElement('button');
+    selectAllButton.className = 'header-button';
+    selectAllButton.innerText = 'Select All';
+    selectAllButton.addEventListener('click', selectAllCheckboxes);
+
+    // Create the "Clear Selections" button
+    const clearSelectionsButton = document.createElement('button');
+    clearSelectionsButton.className = 'header-button';
+    clearSelectionsButton.innerText = 'Clear Selections';
+    clearSelectionsButton.addEventListener('click', clearSelections);
+
+    // Create the counter label
+    const counterLabel = document.createElement('span');
+    counterLabel.id = 'selection-counter';
+    counterLabel.className = 'header-label';
+    counterLabel.innerText = 'Selected: 0 / Total: 0';
+
+    // Append the buttons and label to the header
+    header.appendChild(collectMessagesButton);
+    header.appendChild(selectAllButton);
+    header.appendChild(clearSelectionsButton);
+    header.appendChild(counterLabel);
+
+    console.log("Buttons and counter label added to header.");
+    updateCounter(); // Update counter initially
 }
 
 // Function to initialize message objects for each conversation turn
@@ -45,50 +97,26 @@ function initializeMessageObjects() {
     }
 
     conversationTurns.forEach((turn, index) => {
-        console.log(`Processing turn ${index + 1}`);
-
         const userMessageElement = turn.querySelector('div[data-message-author-role="user"]');
         if (userMessageElement) {
-            console.log(`User message found at turn ${index + 1}`);
-            const userMessageText = userMessageElement.innerText;
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.id = `checkbox-${index}`;
             checkbox.className = 'message-checkbox';
+            checkbox.addEventListener('change', updateCounter);
             turn.insertBefore(checkbox, turn.firstChild);
 
-            const userMessageObject = {
+            messageObjects.push({
                 id: `turn-${index}`,
-                userMessage: userMessageText,
+                userMessage: userMessageElement.innerText,
                 checkbox: checkbox,
-                assistantMessageElement: null,
-                copyButton: null,
                 type: 'user'
-            };
-
-            messageObjects.push(userMessageObject);
+            });
             return;
-        }
-
-        const assistantDiv = turn.querySelector('div[data-message-author-role="assistant"]');
-        if (assistantDiv) {
-            console.log(`Assistant message found at turn ${index + 1}`);
-            const copyButton = turn.querySelector('button[aria-label="Copy"]');
-            const assistantMessageObject = {
-                id: `turn-${index}`,
-                userMessage: null,
-                checkbox: null,
-                assistantMessageElement: assistantDiv,
-                copyButton: copyButton,
-                type: 'assistant'
-            };
-
-            messageObjects.push(assistantMessageObject);
         }
     });
 
-    console.log("Message objects initialized:", messageObjects);
-    addOptionsToHeader(); // Ensure the "Collect and Copy Messages" button is added to the header
+    addOptionsToHeader();
 }
 
 // Function to collect selected messages and copy them to the clipboard
