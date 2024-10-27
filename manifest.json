@@ -1,12 +1,15 @@
 {
   "manifest_version": 3,
   "name": "ChatGPT Message Collector",
-  "version": "1.0",
+  "version": "1.1",
   "description": "Add checkboxes and collect messages on ChatGPT.",
-  "permissions": ["activeTab", "scripting"],
+  "permissions": ["activeTab", "scripting", "clipboardRead", "clipboardWrite"],
+  "action": {
+    "default_popup": "popup.html"
+  },
   "content_scripts": [
     {
-      "matches": ["https://chatgpt.com/*"],
+      "matches": ["*://*.chatgpt.com/*"],
       "js": ["content.js"],
       "css": ["styles.css"]
     }

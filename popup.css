@@ -1,0 +1,36 @@
+/* popup.css */
+body {
+    margin: 0;
+    padding: 10px;
+    width: 150px; /* Set a fixed width for the pop-up */
+    font-family: Arial, sans-serif;
+  }
+  
+  .menu {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  button {
+    margin-bottom: 8px;
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    border: none;
+    background-color: #4CAF50;
+    color: white;
+    text-align: center;
+  }
+  
+  button:hover {
+    background-color: #45a049;
+  }
+  
+  /* Prevent buttons from stretching */
+  button {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
