@@ -25,43 +25,57 @@ function initializeMessageObjects() {
     conversationTurns.forEach((turn, index) => {
         console.log(`Conversation Turn ${index + 1}:`, turn);
 
-        // Find the assistant message inside the conversation turn
+        // Check for a user message
+        const userMessageElement = turn.querySelector('div[data-message-author-role="user"]');
+        if (userMessageElement) {
+            const userMessageText = userMessageElement.innerText;
+
+            // Create a checkbox for each user message, using the turn index
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `checkbox-${index}`;
+            checkbox.className = 'message-checkbox';
+
+            // Insert the checkbox at the beginning of the conversation turn
+            turn.insertBefore(checkbox, turn.firstChild);
+
+            // Create the message object for the user message
+            const userMessageObject = {
+                turnIndex: index,
+                type: 'user',
+                userMessageText: userMessageText,
+                checkbox: checkbox
+            };
+
+            // Store the user message object in the array
+            messageObjects.push(userMessageObject);
+            console.log(`User message found in Conversation Turn ${index + 1}:`, userMessageText);
+        }
+
+        // Check for an assistant message
         const assistantDiv = turn.querySelector('div[data-message-author-role="assistant"]');
         if (assistantDiv) {
-            console.log(`Assistant Div inside Conversation Turn ${index + 1}:`, assistantDiv);
-        } else {
-            console.log(`No Assistant Div found inside Conversation Turn ${index + 1}`);
-            return; // Skip this turn if no assistant message is found
+            const assistantMessageText = assistantDiv.innerText;
+
+            // Find the "Copy" button inside the assistant message
+            const copyButton = turn.querySelector('button[aria-label="Copy"]');
+            if (!copyButton) {
+                console.log(`No Copy Button found in Conversation Turn ${index + 1}, skipping assistant message.`);
+            } else {
+                // Create the message object for the assistant message
+                const assistantMessageObject = {
+                    turnIndex: index,
+                    type: 'assistant',
+                    assistantMessageText: assistantMessageText,
+                    assistantMessageElement: assistantDiv,
+                    copyButton: copyButton
+                };
+
+                // Store the assistant message object in the array
+                messageObjects.push(assistantMessageObject);
+                console.log(`Assistant message found in Conversation Turn ${index + 1}:`, assistantMessageText);
+            }
         }
-
-        // Find the "Copy" button inside the conversation turn
-        const copyButton = turn.querySelector('button[aria-label="Copy"]');
-        if (copyButton) {
-            console.log(`Copy Button inside Conversation Turn ${index + 1}:`, copyButton);
-        } else {
-            console.log(`No Copy Button found inside Conversation Turn ${index + 1}`);
-            return; // Skip this turn if no copy button is found
-        }
-
-        // Create a checkbox for each user message, using the turn index
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.id = `checkbox-${index}`;
-        checkbox.className = 'message-checkbox';
-
-        // Insert the checkbox at the beginning of the conversation turn
-        turn.insertBefore(checkbox, turn.firstChild);
-
-        // Create the message object
-        const messageObject = {
-            turnIndex: index,
-            assistantMessageElement: assistantDiv,
-            copyButton: copyButton,
-            checkbox: checkbox
-        };
-
-        // Store the message object in the array
-        messageObjects.push(messageObject);
     });
 
     // Log the entire list of message objects to the console
@@ -82,32 +96,40 @@ async function collectAndCopyMessages() {
 
     for (const checkbox of checkboxes) {
         const turnIndex = parseInt(checkbox.id.split('-')[1], 10);
-        const messageObject = messageObjects.find(obj => obj.turnIndex === turnIndex);
+        const userMessageObject = messageObjects.find(obj => obj.turnIndex === turnIndex && obj.type === 'user');
 
-        if (messageObject) {
-            console.log(`Processing message from Conversation Turn ${turnIndex + 1}:`);
+        if (userMessageObject) {
+            console.log(`Processing user message from Conversation Turn ${turnIndex + 1}:`);
 
-            // Add assistant message text to the collection
-            selectedMessages.push({ assistant: messageObject.assistantMessageElement.innerText });
+            // Add user message text to the collection
+            selectedMessages.push({ user: userMessageObject.userMessageText });
+            console.log("User message:", userMessageObject.userMessageText);
 
-            console.log("Assistant message:", messageObject.assistantMessageElement.innerText);
+            // Check if the next assistant message corresponds to this user message
+            const assistantMessageObject = messageObjects.find(obj => obj.turnIndex === turnIndex && obj.type === 'assistant');
 
-            // Click the copy button and get the clipboard content
-            messageObject.copyButton.click();
-            await new Promise(resolve => setTimeout(resolve, 200)); // Wait for the copy action
+            if (assistantMessageObject) {
+                console.log("Corresponding assistant message found.");
+                
+                // Click the copy button and get the clipboard content
+                assistantMessageObject.copyButton.click();
+                await new Promise(resolve => setTimeout(resolve, 200)); // Wait for the copy action
 
-            const assistantMessageText = await navigator.clipboard.readText();
-            selectedMessages[selectedMessages.length - 1].assistant = assistantMessageText;
-
-            console.log("Copied assistant message:", assistantMessageText);
+                const assistantMessageText = await navigator.clipboard.readText();
+                selectedMessages[selectedMessages.length - 1].assistant = assistantMessageText;
+                console.log("Copied assistant message:", assistantMessageText);
+            } else {
+                selectedMessages[selectedMessages.length - 1].assistant = "No response found.";
+                console.warn("No corresponding assistant message found.");
+            }
         } else {
-            console.warn(`Message object for Conversation Turn ${turnIndex + 1} not found.`);
+            console.warn(`User message object for Conversation Turn ${turnIndex + 1} not found.`);
         }
     }
 
-    // Combine all assistant messages into a single string
+    // Combine all user and assistant messages into a single string
     const combinedMessages = selectedMessages.map(pair =>
-        `Assistant: ${pair.assistant}`
+        `User: ${pair.user}\nAssistant: ${pair.assistant}`
     ).join('\n\n');
 
     // Copy the combined text to the clipboard
