@@ -1,0 +1,11 @@
+/* Style the checkbox container */
+.checkbox-container {
+  display: inline-block;
+  margin-right: 10px;
+  vertical-align: top;
+}
+
+/* Style the checkboxes */
+.message-checkbox {
+  cursor: pointer;
+}
