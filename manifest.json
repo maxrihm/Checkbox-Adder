@@ -1,24 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "Checkbox Adder",
+  "name": "ChatGPT Message Collector",
   "version": "1.0",
-  "description": "Adds checkboxes to divs for DOM processing and collects messages",
-  "permissions": [
-    "activeTab",
-    "scripting",
-    "clipboardRead",
-    "clipboardWrite"
-  ],
-  "action": {
-    "default_popup": "popup.html"
-  },
+  "description": "Add checkboxes and collect messages on ChatGPT.",
+  "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["*://*/*"],
   "content_scripts": [
     {
-      "matches": [
-        "https://chatgpt.com/*"
-      ],
+      "matches": ["*://*/*"],
       "js": ["content.js"],
-      "css": ["style.css"]
+      "css": ["styles.css"]
     }
   ]
 }
