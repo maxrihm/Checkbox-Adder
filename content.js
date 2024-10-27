@@ -160,7 +160,7 @@ async function collectAndCopyMessages() {
 
 function formatUserMessage(userText) {
     return (
-        '<span style="display: inline-block; background-color: #f0f0f0; border-radius: 18px; padding: 10px 15px; margin: 5px 0; font-family: Arial, sans-serif; color: #333; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);">' +
+        '<span id="chat-gpt-answer" style="display: inline-block; background-color: #f0f0f0; border-radius: 18px; padding: 10px 15px; margin: 5px 0; font-family: Arial, sans-serif; color: #333; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);">' +
         userText +
         '</span>'
     );
