@@ -2,10 +2,12 @@
   "manifest_version": 3,
   "name": "Checkbox Adder",
   "version": "1.0",
-  "description": "Adds checkboxes to divs for DOM processing",
+  "description": "Adds checkboxes to divs for DOM processing and collects messages",
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "clipboardRead",
+    "clipboardWrite"
   ],
   "action": {
     "default_popup": "popup.html"
