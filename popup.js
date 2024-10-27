@@ -21,7 +21,6 @@ document.getElementById("collectMessagesButton").addEventListener("click", () =>
     });
 });
 
-// Function to initialize message objects for each conversation turn
 function initializeMessageObjects() {
     console.clear();
     console.log("Initializing message objects...");
@@ -61,13 +60,16 @@ function initializeMessageObjects() {
 
             // Store the user message object in the array
             messageObjects.push(userMessageObject);
+
+            // Skip to the next iteration since we only handle one type of message per iteration
+            return; 
         }
 
         // Handle assistant messages
         const assistantDiv = turn.querySelector('div[data-message-author-role="assistant"]');
         if (assistantDiv) {
             // Find the "Copy" button inside the assistant message
-            const copyButton = assistantDiv.querySelector('button[aria-label="Copy"]');
+            const copyButton = turn.querySelector('button[aria-label="Copy"]');
 
             // Create the message object for the assistant message
             const assistantMessageObject = {
