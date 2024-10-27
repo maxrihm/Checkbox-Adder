@@ -4,8 +4,12 @@
   "version": "1.0",
   "description": "Adds checkboxes to divs for DOM processing",
   "permissions": [
-    "activeTab"
+    "activeTab",
+    "scripting"
   ],
+  "action": {
+    "default_popup": "popup.html"
+  },
   "content_scripts": [
     {
       "matches": [

@@ -2,10 +2,15 @@
 .checkbox-container {
   display: inline-block;
   margin-right: 10px;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 /* Style the checkboxes */
 .message-checkbox {
   cursor: pointer;
+}
+
+/* Optional: Add some margin to the divs to prevent overlap */
+.checkbox-wrapper {
+  margin-left: 30px; /* Adjust this value if needed */
 }
