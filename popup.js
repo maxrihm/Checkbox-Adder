@@ -41,11 +41,11 @@ function initializeMessageObjects() {
 
             // Create the message object for the user message
             const userMessageObject = {
-                checkbox: false,
                 id: `turn-${index}`,
                 userMessage: userMessageText,
-                assistantMessageElement: null, // No assistant message for user message type
-                copyButton: null, // No copy button for user message type
+                checkbox: checkbox,
+                assistantMessageElement: null,
+                copyButton: null,
                 type: 'user'
             };
 
@@ -61,9 +61,9 @@ function initializeMessageObjects() {
 
             // Create the message object for the assistant message
             const assistantMessageObject = {
-                checkbox: false,
                 id: `turn-${index}`,
-                userMessage: null, // No user message for assistant message type
+                userMessage: null, // Not applicable for assistant message
+                checkbox: null,     // Not applicable for assistant message
                 assistantMessageElement: assistantDiv,
                 copyButton: copyButton,
                 type: 'assistant'
