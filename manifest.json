@@ -4,10 +4,9 @@
   "version": "1.0",
   "description": "Add checkboxes and collect messages on ChatGPT.",
   "permissions": ["activeTab", "scripting"],
-  "host_permissions": ["*://*/*"],
   "content_scripts": [
     {
-      "matches": ["*://*/*"],
+      "matches": ["https://chatgpt.com/*"],
       "js": ["content.js"],
       "css": ["styles.css"]
     }

@@ -122,8 +122,8 @@ async function collectAndCopyMessages() {
         if (currentMessage.type === 'user' && currentMessage.checkbox.checked) {
             console.log(`Processing user message from Conversation Turn ${i + 1}:`);
 
-            // Add user message text to the collection
-            collectedMessages.push(`User: ${currentMessage.userMessage}`);
+            const formattedUserMessage = formatUserMessage(currentMessage.userMessage);
+            collectedMessages.push(`${formattedUserMessage}`);
 
             // The next message should be the corresponding assistant message
             const nextMessage = messageObjects[i + 1];
@@ -136,7 +136,7 @@ async function collectAndCopyMessages() {
 
                 // Read the copied text from the clipboard
                 const assistantMessageText = await navigator.clipboard.readText();
-                collectedMessages.push(`Assistant: ${assistantMessageText}`);
+                collectedMessages.push(`${assistantMessageText}\n\n---`);
 
                 console.log("Copied assistant message:", assistantMessageText);
             } else {
@@ -153,6 +153,14 @@ async function collectAndCopyMessages() {
     await navigator.clipboard.writeText(finalMessage);
     alert("Messages copied to clipboard!");
     console.log("Messages copied to clipboard:", finalMessage);
+}
+
+function formatUserMessage(userText) {
+    return (
+        '<span style="display: inline-block; background-color: #f0f0f0; border-radius: 18px; padding: 10px 15px; margin: 5px 0; font-family: Arial, sans-serif; color: #333; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);">' +
+        userText +
+        '</span>'
+    );
 }
 
 // Initialize the options in the header 5 seconds after the page loads
