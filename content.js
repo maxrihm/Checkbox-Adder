@@ -29,6 +29,81 @@ function clearSelections() {
     updateCounter();
 }
 
+function initializeMessageObjects() {
+    console.clear();
+    console.log("Initializing message objects...");
+
+    messageObjects = [];
+
+    const conversationTurns = document.querySelectorAll('div.group\\/conversation-turn');
+
+    if (conversationTurns.length === 0) {
+        console.warn("No conversation turns found.");
+        return;
+    }
+
+    conversationTurns.forEach((turn, index) => {
+        const userMessageElement = turn.querySelector('div[data-message-author-role="user"]');
+        if (userMessageElement) {
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `checkbox-${index}`;
+            checkbox.className = 'message-checkbox';
+            checkbox.addEventListener('change', updateCounter);
+            turn.insertBefore(checkbox, turn.firstChild);
+
+            // Add "Copy" button for user message
+            const copyButton = document.createElement('button');
+            copyButton.innerText = 'Copy';
+            copyButton.className = 'copy-button';
+            copyButton.addEventListener('click', () => {
+                // Pass the checkbox reference to collectAndCopyMessages to handle individual copy
+                collectAndCopyMessages(checkbox);
+            });
+            turn.insertBefore(copyButton, checkbox.nextSibling);
+
+            // Format user message to limit line breaks
+            const formattedUserMessage = formatUserMessage(userMessageElement.innerText);
+            userMessageElement.innerHTML = formattedUserMessage;
+
+            messageObjects.push({
+                id: `turn-${index}`,
+                userMessage: formattedUserMessage,
+                checkbox: checkbox,
+                type: 'user'
+            });
+            return;
+        }
+
+        const assistantDiv = turn.querySelector('div[data-message-author-role="assistant"]');
+        if (assistantDiv) {
+            console.log(`Assistant message found at turn ${index + 1}`);
+            const copyButton = turn.querySelector('button[aria-label="Copy"]');
+
+            // Add "Copy" button for assistant message if not present
+            if (!copyButton) {
+                const newCopyButton = document.createElement('button');
+                newCopyButton.innerText = 'Copy';
+                newCopyButton.className = 'copy-button';
+                newCopyButton.addEventListener('click', () => {
+                    collectAndCopyMessages();
+                });
+                turn.insertBefore(newCopyButton, assistantDiv);
+            }
+
+            messageObjects.push({
+                id: `turn-${index}`,
+                userMessage: null,
+                checkbox: null,
+                assistantMessageElement: assistantDiv,
+                type: 'assistant'
+            });
+        }
+    });
+
+    addOptionsToHeader();
+}
+
 // Modified function to add options to the header, including new buttons
 function addOptionsToHeader() {
     const header = document.querySelector('div.draggable.no-draggable-children.sticky');
@@ -82,85 +157,52 @@ function addOptionsToHeader() {
     updateCounter(); // Update counter initially
 }
 
-// Function to initialize message objects for each conversation turn
-function initializeMessageObjects() {
-    console.clear();
-    console.log("Initializing message objects...");
+// Function to collect selected messages and copy them to the clipboard
+async function collectAndCopyMessages(targetCheckbox = null) {
+    console.log("Collecting and copying messages...");
 
-    messageObjects = [];
-
-    const conversationTurns = document.querySelectorAll('div.group\\/conversation-turn');
-
-    if (conversationTurns.length === 0) {
-        console.warn("No conversation turns found.");
-        return;
+    // Determine which message objects to process
+    let targetMessages = [];
+    if (targetCheckbox) {
+        // Single message case: find the corresponding message object
+        const singleMessageObject = messageObjects.find(obj => obj.checkbox === targetCheckbox);
+        if (singleMessageObject) {
+            targetMessages = [singleMessageObject];
+        }
+    } else {
+        // General case: use all selected message objects
+        targetMessages = messageObjects.filter(obj => obj.type === 'user' && obj.checkbox && obj.checkbox.checked);
     }
 
-    conversationTurns.forEach((turn, index) => {
-        const userMessageElement = turn.querySelector('div[data-message-author-role="user"]');
-        if (userMessageElement) {
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.id = `checkbox-${index}`;
-            checkbox.className = 'message-checkbox';
-            checkbox.addEventListener('change', updateCounter);
-            turn.insertBefore(checkbox, turn.firstChild);
+    // Collect messages using the helper function
+    const collectedMessages = collectMessagesForObject(targetMessages);
 
-            messageObjects.push({
-                id: `turn-${index}`,
-                userMessage: userMessageElement.innerText,
-                checkbox: checkbox,
-                type: 'user'
-            });
-            return;
-        }
-
-        const assistantDiv = turn.querySelector('div[data-message-author-role="assistant"]');
-        if (assistantDiv) {
-            console.log(`Assistant message found at turn ${index + 1}`);
-            const copyButton = turn.querySelector('button[aria-label="Copy"]');
-            const assistantMessageObject = {
-                id: `turn-${index}`,
-                userMessage: null,
-                checkbox: null,
-                assistantMessageElement: assistantDiv,
-                copyButton: copyButton,
-                type: 'assistant'
-            };
-
-            messageObjects.push(assistantMessageObject);
-        }
-    });
-
-    addOptionsToHeader();
+    // Copy the collected messages to clipboard
+    const finalMessage = collectedMessages.join('\n\n');
+    await navigator.clipboard.writeText(finalMessage);
+    alert("Messages copied to clipboard!");
+    console.log("Messages copied to clipboard:", finalMessage);
 }
 
-// Function to collect selected messages and copy them to the clipboard
-async function collectAndCopyMessages() {
-    console.log("Collecting and copying selected messages...");
-
+// Helper function to collect messages from the specified message objects
+function collectMessagesForObject(messages) {
     const collectedMessages = [];
 
-    for (let i = 0; i < messageObjects.length; i++) {
-        const currentMessage = messageObjects[i];
-
-        if (currentMessage.type === 'user' && currentMessage.checkbox.checked) {
-            console.log(`Processing user message from Conversation Turn ${i + 1}:`);
+    for (let i = 0; i < messages.length; i++) {
+        const currentMessage = messages[i];
+        if (currentMessage.type === 'user') {
+            console.log("Copying user message...");
 
             const formattedUserMessage = formatUserMessage(currentMessage.userMessage);
             collectedMessages.push(`${formattedUserMessage}`);
 
-            const nextMessage = messageObjects[i + 1];
-            if (nextMessage && nextMessage.type === 'assistant' && nextMessage.copyButton) {
+            // Find the corresponding assistant message
+            const nextMessage = messageObjects.find((obj, index) => obj.type === 'assistant' && index > messageObjects.indexOf(currentMessage));
+            if (nextMessage && nextMessage.assistantMessageElement) {
                 console.log("Corresponding assistant message found.");
 
-                nextMessage.copyButton.click();
-                await new Promise(resolve => setTimeout(resolve, 200));
-
-                const assistantMessageText = await navigator.clipboard.readText();
+                const assistantMessageText = nextMessage.assistantMessageElement.innerText;
                 collectedMessages.push(`${assistantMessageText}\n\n---`);
-
-                console.log("Copied assistant message:", assistantMessageText);
             } else {
                 console.warn("No corresponding assistant message found.");
                 collectedMessages.push("Assistant: No response found.");
@@ -168,16 +210,15 @@ async function collectAndCopyMessages() {
         }
     }
 
-    const finalMessage = collectedMessages.join('\n\n');
-    await navigator.clipboard.writeText(finalMessage);
-    alert("Messages copied to clipboard!");
-    console.log("Messages copied to clipboard:", finalMessage);
+    return collectedMessages;
 }
 
+
 function formatUserMessage(userText) {
+    const formattedText = userText.replace(/\n{2,}/g, '\n');
     return (
         '<span id="chat-gpt-answer" style="display: inline-block; background-color: #f0f0f0; border-radius: 18px; padding: 10px 15px; margin: 5px 0; font-family: Arial, sans-serif; color: #333; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);">' +
-        userText +
+        formattedText +
         '</span>'
     );
 }
