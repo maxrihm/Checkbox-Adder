@@ -114,6 +114,22 @@ function initializeMessageObjects() {
             });
             return;
         }
+
+        const assistantDiv = turn.querySelector('div[data-message-author-role="assistant"]');
+        if (assistantDiv) {
+            console.log(`Assistant message found at turn ${index + 1}`);
+            const copyButton = turn.querySelector('button[aria-label="Copy"]');
+            const assistantMessageObject = {
+                id: `turn-${index}`,
+                userMessage: null,
+                checkbox: null,
+                assistantMessageElement: assistantDiv,
+                copyButton: copyButton,
+                type: 'assistant'
+            };
+
+            messageObjects.push(assistantMessageObject);
+        }
     });
 
     addOptionsToHeader();
