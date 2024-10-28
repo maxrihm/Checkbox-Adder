@@ -68,14 +68,11 @@ function initializeMessageObjects() {
             });
             turn.insertBefore(copyButton, checkbox.nextSibling);
 
-            // Format user message to replace line breaks with spaces
-            const formattedUserMessage = formatUserMessage(userMessageText);
-            userMessageElement.innerHTML = formattedUserMessage;
 
             // Create the user message object
             const userMessageObject = {
                 id: `turn-${index}`,
-                userMessage: formattedUserMessage,
+                userMessage: userMessageText,
                 checkbox: checkbox,
                 assistantMessageElement: null,
                 copyButton: copyButton,
@@ -107,6 +104,15 @@ function initializeMessageObjects() {
 
     console.log("Message objects initialized:", messageObjects);
     addOptionsToHeader(); // Ensure the "Collect and Copy Messages" button is added to the header
+}
+
+function formatUserMessage(userText) {
+    const formattedText = userText.replace(/(\r\n|\n|\r)+/g, ' ').trim();
+    return (
+        '<span id="chat-gpt-answer" style="display: inline-block; background-color: #f0f0f0; border-radius: 18px; padding: 10px 15px; margin: 5px 0; font-family: Arial, sans-serif; color: #333; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);">' +
+        formattedText +
+        '</span>'
+    );
 }
 
 // Modified function to add options to the header, including new buttons
@@ -223,14 +229,7 @@ async function collectAndCopyMessages(targetCheckbox = null) {
 }
 
 
-function formatUserMessage(userText) {
-    const formattedText = userText.replace(/\n+/g, ' ').trim();
-    return (
-        '<span id="chat-gpt-answer" style="display: inline-block; background-color: #f0f0f0; border-radius: 18px; padding: 10px 15px; margin: 5px 0; font-family: Arial, sans-serif; color: #333; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);">' +
-        formattedText +
-        '</span>'
-    );
-}
+
 
 // Listen for messages from the pop-up
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
