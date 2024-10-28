@@ -22,18 +22,27 @@
   color: #333;
 }
 
+/* Style for the smaller copy button */
 .copy-button-small {
   cursor: pointer;
-  padding: 2px 6px;
-  margin: 2px 5px;
-  background-color: #4CAF50;
+  padding: 0;
+  width: 40px; /* Set a small, fixed width */
+  height: 20px; /* Fixed height */
+  font-size: 10px; /* Smaller font size */
   color: white;
+  background-color: orange;
   border: none;
   border-radius: 3px;
-  font-size: 10px;
-  transition: background-color 0.3s;
-  vertical-align: middle; /* Align with the checkbox */
+  margin-left: 5px; /* Add some space to the left */
+  text-align: center;
+  line-height: 20px; /* Center the text vertically */
+  display: inline-block; /* Ensure the button is inline with the checkbox */
+  vertical-align: middle; /* Align it with the checkbox */
+  position: relative; /* Position it relative to the parent */
+  right: 5px;
+  top: 5px;
 }
+
 
 .copy-button-small:hover {
   background-color: #45a049;
