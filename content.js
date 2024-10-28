@@ -43,8 +43,14 @@ function initializeMessageObjects() {
     }
 
     conversationTurns.forEach((turn, index) => {
+        console.log(`Processing turn ${index + 1}`);
+
         const userMessageElement = turn.querySelector('div[data-message-author-role="user"]');
         if (userMessageElement) {
+            console.log(`User message found at turn ${index + 1}`);
+            const userMessageText = userMessageElement.innerText;
+
+            // Create checkbox for the user message
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.id = `checkbox-${index}`;
@@ -52,26 +58,31 @@ function initializeMessageObjects() {
             checkbox.addEventListener('change', updateCounter);
             turn.insertBefore(checkbox, turn.firstChild);
 
-            // Add "Copy" button for user message
+            // Add a smaller "Copy" button for user message
             const copyButton = document.createElement('button');
             copyButton.innerText = 'Copy';
-            copyButton.className = 'copy-button';
+            copyButton.className = 'copy-button-small';
             copyButton.addEventListener('click', () => {
                 // Pass the checkbox reference to collectAndCopyMessages to handle individual copy
                 collectAndCopyMessages(checkbox);
             });
             turn.insertBefore(copyButton, checkbox.nextSibling);
 
-            // Format user message to limit line breaks
-            const formattedUserMessage = formatUserMessage(userMessageElement.innerText);
+            // Format user message to replace line breaks with spaces
+            const formattedUserMessage = formatUserMessage(userMessageText);
             userMessageElement.innerHTML = formattedUserMessage;
 
-            messageObjects.push({
+            // Create the user message object
+            const userMessageObject = {
                 id: `turn-${index}`,
                 userMessage: formattedUserMessage,
                 checkbox: checkbox,
+                assistantMessageElement: null,
+                copyButton: copyButton,
                 type: 'user'
-            });
+            };
+
+            messageObjects.push(userMessageObject);
             return;
         }
 
@@ -80,28 +91,22 @@ function initializeMessageObjects() {
             console.log(`Assistant message found at turn ${index + 1}`);
             const copyButton = turn.querySelector('button[aria-label="Copy"]');
 
-            // Add "Copy" button for assistant message if not present
-            if (!copyButton) {
-                const newCopyButton = document.createElement('button');
-                newCopyButton.innerText = 'Copy';
-                newCopyButton.className = 'copy-button';
-                newCopyButton.addEventListener('click', () => {
-                    collectAndCopyMessages();
-                });
-                turn.insertBefore(newCopyButton, assistantDiv);
-            }
-
-            messageObjects.push({
+            // Create the assistant message object
+            const assistantMessageObject = {
                 id: `turn-${index}`,
                 userMessage: null,
                 checkbox: null,
                 assistantMessageElement: assistantDiv,
+                copyButton: copyButton,
                 type: 'assistant'
-            });
+            };
+
+            messageObjects.push(assistantMessageObject);
         }
     });
 
-    addOptionsToHeader();
+    console.log("Message objects initialized:", messageObjects);
+    addOptionsToHeader(); // Ensure the "Collect and Copy Messages" button is added to the header
 }
 
 // Modified function to add options to the header, including new buttons
@@ -157,52 +162,53 @@ function addOptionsToHeader() {
     updateCounter(); // Update counter initially
 }
 
+
+
 // Function to collect selected messages and copy them to the clipboard
 async function collectAndCopyMessages(targetCheckbox = null) {
     console.log("Collecting and copying messages...");
+
+    let collectedMessages = [];
 
     // Determine which message objects to process
     let targetMessages = [];
     if (targetCheckbox) {
         // Single message case: find the corresponding message object
-        const singleMessageObject = messageObjects.find(obj => obj.checkbox === targetCheckbox);
-        if (singleMessageObject) {
-            targetMessages = [singleMessageObject];
+        const singleMessageIndex = messageObjects.findIndex(obj => obj.checkbox === targetCheckbox);
+        if (singleMessageIndex !== -1) {
+            // Include both the current user message and the next assistant message
+            targetMessages = [messageObjects[singleMessageIndex], messageObjects[singleMessageIndex + 1]];
         }
     } else {
-        // General case: use all selected message objects
-        targetMessages = messageObjects.filter(obj => obj.type === 'user' && obj.checkbox && obj.checkbox.checked);
+        // General case: use all message objects
+        targetMessages = messageObjects;
     }
 
-    // Collect messages using the helper function
-    const collectedMessages = collectMessagesForObject(targetMessages);
+    // Collect messages for each pair of user and assistant message objects
+    for (let i = 0; i < targetMessages.length; i += 2) {
+        const currentMessage = targetMessages[i];
+        const nextMessage = targetMessages[i + 1];
 
-    // Copy the collected messages to clipboard
-    const finalMessage = collectedMessages.join('\n\n');
-    await navigator.clipboard.writeText(finalMessage);
-    alert("Messages copied to clipboard!");
-    console.log("Messages copied to clipboard:", finalMessage);
-}
-
-// Helper function to collect messages from the specified message objects
-function collectMessagesForObject(messages) {
-    const collectedMessages = [];
-
-    for (let i = 0; i < messages.length; i++) {
-        const currentMessage = messages[i];
-        if (currentMessage.type === 'user') {
+        if (currentMessage && currentMessage.type === 'user') {
             console.log("Copying user message...");
 
+            // Add the user message text
             const formattedUserMessage = formatUserMessage(currentMessage.userMessage);
             collectedMessages.push(`${formattedUserMessage}`);
 
-            // Find the corresponding assistant message
-            const nextMessage = messageObjects.find((obj, index) => obj.type === 'assistant' && index > messageObjects.indexOf(currentMessage));
-            if (nextMessage && nextMessage.assistantMessageElement) {
+            // Handle the corresponding assistant message
+            if (nextMessage && nextMessage.type === 'assistant' && nextMessage.copyButton) {
                 console.log("Corresponding assistant message found.");
 
-                const assistantMessageText = nextMessage.assistantMessageElement.innerText;
+                // Click the copy button to copy the content
+                nextMessage.copyButton.click();
+                await new Promise(resolve => setTimeout(resolve, 200)); // Wait for the copy action
+
+                // Read the copied text from the clipboard
+                const assistantMessageText = await navigator.clipboard.readText();
                 collectedMessages.push(`${assistantMessageText}\n\n---`);
+
+                console.log("Copied assistant message:", assistantMessageText);
             } else {
                 console.warn("No corresponding assistant message found.");
                 collectedMessages.push("Assistant: No response found.");
@@ -210,12 +216,15 @@ function collectMessagesForObject(messages) {
         }
     }
 
-    return collectedMessages;
+    // Copy the collected messages to clipboard
+    const finalMessage = collectedMessages.join('\n\n');
+    await navigator.clipboard.writeText(finalMessage);
+    console.log("Messages copied to clipboard:", finalMessage);
 }
 
 
 function formatUserMessage(userText) {
-    const formattedText = userText.replace(/\n{2,}/g, '\n');
+    const formattedText = userText.replace(/\n+/g, ' ').trim();
     return (
         '<span id="chat-gpt-answer" style="display: inline-block; background-color: #f0f0f0; border-radius: 18px; padding: 10px 15px; margin: 5px 0; font-family: Arial, sans-serif; color: #333; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);">' +
         formattedText +
