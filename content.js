@@ -170,7 +170,6 @@ function addOptionsToHeader() {
 
 
 
-// Function to collect selected messages and copy them to the clipboard
 async function collectAndCopyMessages(targetCheckbox = null) {
     console.log("Collecting and copying messages...");
 
@@ -186,14 +185,14 @@ async function collectAndCopyMessages(targetCheckbox = null) {
             targetMessages = [messageObjects[singleMessageIndex], messageObjects[singleMessageIndex + 1]];
         }
     } else {
-        // General case: use all message objects
-        targetMessages = messageObjects;
+        // General case: use only checked user messages
+        targetMessages = messageObjects.filter((obj, index) => obj.type === 'user' && obj.checkbox && obj.checkbox.checked);
     }
 
-    // Collect messages for each pair of user and assistant message objects
-    for (let i = 0; i < targetMessages.length; i += 2) {
+    // Collect messages for each user message and its corresponding assistant message
+    for (let i = 0; i < targetMessages.length; i++) {
         const currentMessage = targetMessages[i];
-        const nextMessage = targetMessages[i + 1];
+        const nextMessage = messageObjects[messageObjects.indexOf(currentMessage) + 1];
 
         if (currentMessage && currentMessage.type === 'user') {
             console.log("Copying user message...");
@@ -227,6 +226,7 @@ async function collectAndCopyMessages(targetCheckbox = null) {
     await navigator.clipboard.writeText(finalMessage);
     console.log("Messages copied to clipboard:", finalMessage);
 }
+
 
 
 
