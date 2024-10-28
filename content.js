@@ -68,7 +68,6 @@ function initializeMessageObjects() {
             });
             turn.insertBefore(copyButton, checkbox.nextSibling);
 
-
             // Create the user message object
             const userMessageObject = {
                 id: `turn-${index}`,
@@ -135,6 +134,7 @@ function addOptionsToHeader() {
     const collectMessagesButton = document.createElement('button');
     collectMessagesButton.className = 'header-button';
     collectMessagesButton.innerText = 'Collect and Copy Messages';
+    collectMessagesButton.style.backgroundColor = 'orange';
     collectMessagesButton.addEventListener('click', () => {
         console.log("Collect and Copy Messages button clicked.");
         collectAndCopyMessages();
@@ -152,6 +152,13 @@ function addOptionsToHeader() {
     clearSelectionsButton.innerText = 'Clear Selections';
     clearSelectionsButton.addEventListener('click', clearSelections);
 
+    // Create the "Reload" button
+    const reloadButton = document.createElement('button');
+    reloadButton.className = 'header-button';
+    reloadButton.innerText = 'Reload';
+    reloadButton.style.backgroundColor = 'blue';
+    reloadButton.addEventListener('click', reloadMessages);
+
     // Create the counter label
     const counterLabel = document.createElement('span');
     counterLabel.id = 'selection-counter';
@@ -162,13 +169,24 @@ function addOptionsToHeader() {
     header.appendChild(collectMessagesButton);
     header.appendChild(selectAllButton);
     header.appendChild(clearSelectionsButton);
+    header.appendChild(reloadButton);
     header.appendChild(counterLabel);
 
     console.log("Buttons and counter label added to header.");
     updateCounter(); // Update counter initially
 }
 
+// Function to reload the messages
+function reloadMessages() {
+    console.log("Reloading messages...");
 
+    // Clear existing message checkboxes and buttons
+    document.querySelectorAll('.message-checkbox').forEach(el => el.remove());
+    document.querySelectorAll('.copy-button-small').forEach(el => el.remove());
+
+    // Reinitialize the message objects
+    initializeMessageObjects();
+}
 
 async function collectAndCopyMessages(targetCheckbox = null) {
     console.log("Collecting and copying messages...");
@@ -226,10 +244,6 @@ async function collectAndCopyMessages(targetCheckbox = null) {
     await navigator.clipboard.writeText(finalMessage);
     console.log("Messages copied to clipboard:", finalMessage);
 }
-
-
-
-
 
 // Listen for messages from the pop-up
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
